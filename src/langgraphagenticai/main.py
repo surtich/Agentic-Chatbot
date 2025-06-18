@@ -1,6 +1,7 @@
 import streamlit as st
 from src.langgraphagenticai.LLMS.llm import LLM
 from src.langgraphagenticai.graph.graph_builder import GraphBuilder
+from src.langgraphagenticai.ui.streamlitui.display_result import DisplayResultStreamlit
 from src.langgraphagenticai.ui.streamlitui.loadui import LoadStreamlitUI
 
 # INICIO de la función PRINCIPAL
@@ -41,8 +42,8 @@ def load_langgraph_agenticai_app():
 
             try:
                 graph = graph_builder.setup_graph(usecase)
-                response = graph.invoke({"messages": [user_message]})
-                st.write(response["messages"][-1].content)
+                DisplayResultStreamlit(usecase,graph,user_message).display_result_on_ui()
+
             except ValueError as e:
                 st.error(f"Error al configurar el grafo: {e}")
                 return
