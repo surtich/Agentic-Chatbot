@@ -16,6 +16,11 @@ class Config:
         if section in self.config:
             return self.config[section].get("MODEL_OPTIONS", "Modelo no configurado").split(", ")
         return ["Modelo no configurado"]
+    
+    def get_base_url(self, provider):
+        section = provider.strip()
+        if section in self.config:
+            return self.config[section].get("BASE_URL")
 
     def get_page_title(self):
         return self.config["DEFAULT"].get("PAGE_TITLE", "Título no configurado")

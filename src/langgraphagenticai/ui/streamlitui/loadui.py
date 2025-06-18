@@ -27,6 +27,11 @@ class LoadStreamlitUI:
             # Model selection dinámico
             model_options = self.config.get_model_options(selected_llm)
             self.user_controls[f"selected_model"] = st.selectbox("Select Model", model_options)
+            # Base URL sólo se muestra si existe la configuración BASE_URL
+            base_url = self.config.get_base_url(selected_llm)
+            
+            if base_url:
+                self.user_controls["BASE_URL"] = st.text_input("Base URL", value=base_url)
 
             # API key input dinámico, pre-cargada desde .env si existe
             api_key_label = f"{selected_llm.upper()}_API_KEY"
