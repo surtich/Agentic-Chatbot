@@ -14,6 +14,7 @@ dependencies = [
     { name = "langchain-groq" },
     { name = "langchain-openai" },
     { name = "langgraph" },
+    { name = "python-dotenv" },
     { name = "streamlit" },
     { name = "tavily-python" },
 ]
@@ -27,6 +28,7 @@ requires-dist = [
     { name = "langchain-groq", specifier = ">=0.3.2" },
     { name = "langchain-openai", specifier = ">=0.3.24" },
     { name = "langgraph", specifier = ">=0.4.8" },
+    { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "streamlit", specifier = ">=1.46.0" },
     { name = "tavily-python", specifier = ">=0.7.7" },
 ]
