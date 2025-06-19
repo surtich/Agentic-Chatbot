@@ -25,6 +25,8 @@ class LoadStreamlitUI:
         st.session_state.timeframe = ''
         st.session_state.topic = ''
         st.session_state.IsFetchButtonClicked = False
+        if not st.session_state.get("chat_history"):
+            st.session_state["chat_history"] = []
 
         with st.sidebar:
             # Get options from config
@@ -54,22 +56,24 @@ class LoadStreamlitUI:
             # Use case selection
             self.user_controls["selected_usecase"] = st.selectbox("Select Usecases", usecase_options)
 
+            # Mantener el estado para los casos de uso indicados
+            if self.user_controls["selected_usecase"] in ["Basic Chatbot", "Chatbot with Search"]:
+                if "chat_history" not in st.session_state:
+                    st.session_state["chat_history"] = []
+
             if self.user_controls["selected_usecase"] in ["Chatbot with Search", "News Summarizer"]:
                 tavily_api_key = os.getenv("TAVILY_API_KEY", "")
                 os.environ["TAVILY_API_KEY"] = self.user_controls["TAVILY_API_KEY"] = st.session_state["TAVILY_API_KEY"] = st.text_input("Tavily API Key", value=tavily_api_key, type="password", autocomplete="off")
-                
                 if not self.user_controls["TAVILY_API_KEY"]:
                     st.warning("⚠️ Por favor, introduce tu Tavily API Key para continuar.")
                 elif self.user_controls['selected_usecase']=="News Summarizer":
                     st.subheader("📰 News Explorer ")
-                    
                     with st.sidebar:
                         time_frame = st.selectbox(
                             "📅 Selecciona el periodo",
                             ["daily", "weekly", "monthly", "yearly"],
                             index=0
                         )
-                    
                     self.user_controls['topic'] = st.text_input("Tema:", value="AI", placeholder="ej: AI, Real Madrid, etc.")
                     if st.button(f"🔍 Noticias de {abbreviate_text(self.user_controls['topic'])}" if self.user_controls['topic'] else "↑ ↑ ↑ Introduce tema ↑ ↑ ↑", use_container_width=True, disabled=(self.user_controls['topic'].strip() == "")):
                         st.session_state.IsFetchButtonClicked = True
