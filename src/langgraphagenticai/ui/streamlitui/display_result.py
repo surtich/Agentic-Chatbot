@@ -35,3 +35,30 @@ class DisplayResultStreamlit:
                 elif type(message)==AIMessage and message.content:
                     with st.chat_message("assistant"):
                         st.write(message.content)
+        elif usecase == "News Summarizer":
+            frequency = self.user_message["frequency"]
+            topic = self.user_message["topic"]
+            with st.spinner("Obteniendo y resumiendo noticias... ⏳"):
+                graph.invoke({"frequency": frequency, "topic": topic})
+                NEWS_PATH = f"./news/{topic}-{frequency}_summary.md"
+                try:
+                    # Leer el archivo markdown
+                    with open(NEWS_PATH, "r") as file:
+                        markdown_content = file.read()
+
+                    # Mostrar el contenido markdown en Streamlit
+                    st.markdown(markdown_content, unsafe_allow_html=True)
+                except FileNotFoundError:
+                    st.error(f"Noticias no generadas o archivo no encontrado: {NEWS_PATH}")
+                except Exception as e:
+                    st.error(f"Ocurrió un error: {str(e)}")
+                    
+                
+                with open(NEWS_PATH, 'r') as f:
+                    st.download_button(
+                        "💾 Descargar Resumen",
+                        f.read(),
+                        file_name=NEWS_PATH,
+                        mime="text/markdown"
+                    )
+                st.success(f"✅ Resumen guardado en {NEWS_PATH}")

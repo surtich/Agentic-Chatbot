@@ -4,7 +4,15 @@ from dotenv import load_dotenv
 from src.langgraphagenticai.ui.uiconfigfile import Config
 
 # Cargar variables de entorno desde .env en la raíz del proyecto (por defecto)
-load_dotenv()
+load_dotenv(override=True)
+
+def abbreviate_text(text, max_length=20):
+    """
+    Abrevia el texto a un máximo de max_length caracteres.
+    """
+    if len(text) > max_length:
+        return text[:max_length] + "..."
+    return text
 
 class LoadStreamlitUI:
     def __init__(self):
@@ -14,6 +22,9 @@ class LoadStreamlitUI:
     def load_streamlit_ui(self):
         st.set_page_config(page_title= "🤖 " + self.config.get_page_title(), layout="wide")
         st.header("🤖 " + self.config.get_page_title())
+        st.session_state.timeframe = ''
+        st.session_state.topic = ''
+        st.session_state.IsFetchButtonClicked = False
 
         with st.sidebar:
             # Get options from config
@@ -43,10 +54,30 @@ class LoadStreamlitUI:
             # Use case selection
             self.user_controls["selected_usecase"] = st.selectbox("Select Usecases", usecase_options)
 
-            if self.user_controls["selected_usecase"] == "Chatbot with Search":
+            if self.user_controls["selected_usecase"] in ["Chatbot with Search", "News Summarizer"]:
                 tavily_api_key = os.getenv("TAVILY_API_KEY", "")
                 os.environ["TAVILY_API_KEY"] = self.user_controls["TAVILY_API_KEY"] = st.session_state["TAVILY_API_KEY"] = st.text_input("Tavily API Key", value=tavily_api_key, type="password", autocomplete="off")
+                
                 if not self.user_controls["TAVILY_API_KEY"]:
                     st.warning("⚠️ Por favor, introduce tu Tavily API Key para continuar.")
+                elif self.user_controls['selected_usecase']=="News Summarizer":
+                    st.subheader("📰 News Explorer ")
+                    
+                    with st.sidebar:
+                        time_frame = st.selectbox(
+                            "📅 Selecciona el periodo",
+                            ["daily", "weekly", "monthly", "yearly"],
+                            index=0
+                        )
+                    
+                    self.user_controls['topic'] = st.text_input("Tema:", value="AI", placeholder="ej: AI, Real Madrid, etc.")
+                    if st.button(f"🔍 Noticias de {abbreviate_text(self.user_controls['topic'])}" if self.user_controls['topic'] else "↑ ↑ ↑ Introduce tema ↑ ↑ ↑", use_container_width=True, disabled=(self.user_controls['topic'].strip() == "")):
+                        st.session_state.IsFetchButtonClicked = True
+                        st.session_state.timeframe = time_frame
+                        st.session_state.topic = self.user_controls['topic'].strip()
+                    else :
+                        st.session_state.IsFetchButtonClicked = False
+
+                    
 
         return self.user_controls

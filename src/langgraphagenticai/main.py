@@ -20,8 +20,12 @@ def load_langgraph_agenticai_app():
     if not user_input:
         st.error("Error: No se pudo cargar la entrada del usuario desde la interfaz de usuario.")
         return
+    
+    if st.session_state.IsFetchButtonClicked:
+        user_message = {"frequency": st.session_state.timeframe, "topic": st.session_state.topic}
+    else :
+        user_message = st.chat_input("Escribe tu mensaje")
 
-    user_message = st.chat_input("Escribe tu mensaje")
 
     if user_message:
         

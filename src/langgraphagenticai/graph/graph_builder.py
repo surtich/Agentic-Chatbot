@@ -2,6 +2,8 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import tools_condition
 
 from src.langgraphagenticai.nodes.basic_chatbot_node import BasicChatbotNode
+from src.langgraphagenticai.nodes.news_node import NewsNode
+from src.langgraphagenticai.state.news_state import NewsState
 from src.langgraphagenticai.state.state import State
 from src.langgraphagenticai.tools.search_tool import get_tools,create_tool_node
 from src.langgraphagenticai.nodes.chatbot_with_Tool_node import ChatbotWithToolNode
@@ -10,12 +12,12 @@ from src.langgraphagenticai.nodes.chatbot_with_Tool_node import ChatbotWithToolN
 class GraphBuilder:
     def __init__(self, llm):
         self.llm = llm
-        self.graph_builder = StateGraph(State)
 
     def basic_chatbot_build_graph(self):
         """
         Construye un grafo básico para un chatbot.
         """
+        self.graph_builder = StateGraph(State) 
 
         self.basic_chatbot_node = BasicChatbotNode(self.llm)
 
@@ -31,6 +33,9 @@ class GraphBuilder:
         capacidades de herramienta y configura aristas condicionales y directas entre nodos.
         El nodo de chatbot se establece como el punto de entrada.
         """
+
+        self.graph_builder = StateGraph(State) 
+
         ## Definir la herramienta y el nodo de herramienta
 
         tools=get_tools()
@@ -53,6 +58,22 @@ class GraphBuilder:
         self.graph_builder.add_edge("tools", "chatbot")
         self.graph_builder.add_edge("chatbot", END)
 
+    def news_build_graph(self):
+
+        self.graph_builder = StateGraph(NewsState)
+
+        # Initialize the AINewsNode
+        ai_news_node = NewsNode(self.llm)
+
+        self.graph_builder.add_node("fetch_news", ai_news_node.fetch_news)
+        self.graph_builder.add_node("summarize_news", ai_news_node.summarize_news)
+        self.graph_builder.add_node("save_result", ai_news_node.save_result)
+
+        self.graph_builder.set_entry_point("fetch_news")
+        self.graph_builder.add_edge("fetch_news", "summarize_news")
+        self.graph_builder.add_edge("summarize_news", "save_result")
+        self.graph_builder.add_edge("save_result", END)
+
     def setup_graph(self, usecase):
         """
         Configura el grafo basado en el caso de uso seleccionado.
@@ -61,6 +82,9 @@ class GraphBuilder:
             self.basic_chatbot_build_graph()
         elif usecase == "Chatbot with Search":
             self.chatbot_with_tools_build_graph()
+        elif usecase == "News Summarizer":
+            self.news_build_graph()
+        
         else:
             raise ValueError(f"Caso de uso '{usecase}' no es compatible.")
 

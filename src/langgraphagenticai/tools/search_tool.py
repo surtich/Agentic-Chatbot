@@ -5,7 +5,7 @@ def get_tools():
     """
     Devuelve la lista de herramientas a utilizar en el chatbot
     """
-    tools=[TavilySearchResults(max_results=2)]
+    tools=[TavilySearchResults(max_results=10)]
     return tools
 
 def create_tool_node(tools):
