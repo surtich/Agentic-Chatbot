@@ -36,11 +36,17 @@ class LoadStreamlitUI:
             # API key input dinámico, pre-cargada desde .env si existe
             api_key_label = f"{selected_llm.upper()}_API_KEY"
             api_key_env = os.getenv(api_key_label, "")
-            self.user_controls["API_KEY"] = st.text_input("API Key", value=api_key_env, type="password", autocomplete="off")
+            self.user_controls["API_KEY"] = st.session_state["API_KEY"] = st.text_input("API Key", value=api_key_env, type="password", autocomplete="off")
             if not self.user_controls["API_KEY"]:
-                st.warning(f"⚠️ Please enter your {api_key_label} to proceed.")
+                st.warning(f"⚠️ Por favor, introduce tu {api_key_label} para continuar.")
 
             # Use case selection
             self.user_controls["selected_usecase"] = st.selectbox("Select Usecases", usecase_options)
+
+            if self.user_controls["selected_usecase"] == "Chatbot with Search":
+                tavily_api_key = os.getenv("TAVILY_API_KEY", "")
+                os.environ["TAVILY_API_KEY"] = self.user_controls["TAVILY_API_KEY"] = st.session_state["TAVILY_API_KEY"] = st.text_input("Tavily API Key", value=tavily_api_key, type="password", autocomplete="off")
+                if not self.user_controls["TAVILY_API_KEY"]:
+                    st.warning("⚠️ Por favor, introduce tu Tavily API Key para continuar.")
 
         return self.user_controls
