@@ -7,24 +7,9 @@ class DisplayResultStreamlit:
         self.graph = graph
         self.user_message = user_message
 
-    def display_result_on_ui(self):
-        usecase = self.usecase
-        graph = self.graph
-        user_message = self.user_message
-
+    @staticmethod
+    def print_chat_history(usecase):
         if usecase in ["Basic Chatbot", "Chatbot with Search"]:
-            
-            # Añadir el mensaje del usuario al historial
-            if user_message:
-                st.session_state["chat_history"].append({"role": "user", "content": user_message})
-
-            # Pasar todo el historial al grafo
-            state = {"messages": st.session_state["chat_history"]}
-            res = graph.invoke(state)
-
-            # Actualizar historial con la respuesta del grafo
-            st.session_state["chat_history"] = res["messages"]
-
             # Mostrar todo el historial (soporta dicts y objetos LangChain)
             for msg in st.session_state["chat_history"]:
                 # Si es un dict (antiguo), usa las claves
@@ -44,6 +29,27 @@ class DisplayResultStreamlit:
                 else:
                     with st.chat_message("assistant"):
                         st.write(content)
+
+    def display_result_on_ui(self):
+        usecase = self.usecase
+        graph = self.graph
+        user_message = self.user_message
+
+        if usecase in ["Basic Chatbot", "Chatbot with Search"]:
+            
+            # Añadir el mensaje del usuario al historial
+            if user_message:
+                st.session_state["chat_history"].append({"role": "user", "content": user_message})
+
+            # Pasar todo el historial al grafo
+            state = {"messages": st.session_state["chat_history"]}
+            res = graph.invoke(state)
+
+            # Actualizar historial con la respuesta del grafo
+            st.session_state["chat_history"] = res["messages"]
+
+            self.print_chat_history(usecase)
+
         elif usecase == "News Summarizer":
             frequency = self.user_message["frequency"]
             topic = self.user_message["topic"]

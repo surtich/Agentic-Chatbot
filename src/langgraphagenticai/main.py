@@ -21,6 +21,14 @@ def load_langgraph_agenticai_app():
         st.error("Error: No se pudo cargar la entrada del usuario desde la interfaz de usuario.")
         return
     
+
+    usecase = user_input["selected_usecase"]
+
+    if not usecase:
+        st.error("Error: No se ha seleccionado un caso de uso.")
+        return
+
+    
     if st.session_state.IsFetchButtonClicked:
         user_message = {"frequency": st.session_state.timeframe, "topic": st.session_state.topic}
     else :
@@ -36,12 +44,6 @@ def load_langgraph_agenticai_app():
                 st.error("Error: No se pudo crear el modelo LLM.")
                 return
             
-            usecase = user_input["selected_usecase"]
-
-            if not usecase:
-                st.error("Error: No se ha seleccionado un caso de uso.")
-                return
-
             graph_builder = GraphBuilder(llm)
 
             try:
@@ -51,6 +53,9 @@ def load_langgraph_agenticai_app():
             except ValueError as e:
                 st.error(f"Error al configurar el grafo: {e}")
                 return
-
+        
         except Exception as e:
             raise ValueError(f"Ha ocurrido un error: {e}")
+
+    else:
+        DisplayResultStreamlit.print_chat_history(usecase)
