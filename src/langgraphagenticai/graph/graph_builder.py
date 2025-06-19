@@ -7,7 +7,10 @@ from src.langgraphagenticai.state.news_state import NewsState
 from src.langgraphagenticai.state.state import State
 from src.langgraphagenticai.tools.search_tool import get_tools,create_tool_node
 from src.langgraphagenticai.nodes.chatbot_with_Tool_node import ChatbotWithToolNode
+from langgraph.checkpoint.memory import InMemorySaver
 
+
+checkpointer = InMemorySaver()
 
 class GraphBuilder:
     def __init__(self, llm):
@@ -24,6 +27,8 @@ class GraphBuilder:
         self.graph_builder.add_node("chatbot", self.basic_chatbot_node.process)
         self.graph_builder.add_edge(START, "chatbot")
         self.graph_builder.add_edge("chatbot", END)
+
+        self.checkpointer = checkpointer
 
     def chatbot_with_tools_build_graph(self):
         """
@@ -58,6 +63,8 @@ class GraphBuilder:
         self.graph_builder.add_edge("tools", "chatbot")
         self.graph_builder.add_edge("chatbot", END)
 
+        self.checkpointer = checkpointer
+
     def news_build_graph(self):
 
         self.graph_builder = StateGraph(NewsState)
@@ -74,12 +81,14 @@ class GraphBuilder:
         self.graph_builder.add_edge("summarize_news", "save_result")
         self.graph_builder.add_edge("save_result", END)
 
+        self.checkpointer = None
+
     def setup_graph(self, usecase):
         """
         Configura el grafo basado en el caso de uso seleccionado.
         """
         if usecase == "Basic Chatbot":
-            self.basic_chatbot_build_graph()
+            self.basic_chatbot_build_graph()                     
         elif usecase == "Chatbot with Search":
             self.chatbot_with_tools_build_graph()
         elif usecase == "News Summarizer":
@@ -88,5 +97,6 @@ class GraphBuilder:
         else:
             raise ValueError(f"Caso de uso '{usecase}' no es compatible.")
 
-        return self.graph_builder.compile()
+        graph = self.graph_builder.compile(checkpointer=self.checkpointer)
+        return graph, self.checkpointer
 

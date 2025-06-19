@@ -1,58 +1,58 @@
 import streamlit as st
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage
 
+
 class DisplayResultStreamlit:
-    def __init__(self, usecase, graph, user_message):
+    def __init__(self, usecase, graph, checkpointer):
         self.usecase = usecase
         self.graph = graph
-        self.user_message = user_message
+        self.checkpointer = checkpointer
 
-    @staticmethod
-    def print_chat_history(usecase):
-        if usecase in ["Basic Chatbot", "Chatbot with Search"]:
-            # Mostrar todo el historial (soporta dicts y objetos LangChain)
-            for msg in st.session_state["chat_history"]:
-                # Si es un dict (antiguo), usa las claves
-                if isinstance(msg, dict):
-                    role = msg.get("role")
-                    content = msg.get("content")
-                # Si es un objeto LangChain, usa sus atributos
-                elif hasattr(msg, "type") and hasattr(msg, "content"):
-                    role = msg.type  # 'human', 'ai', etc.
-                    content = msg.content
-                else:
+    def get_current_history(self):
+        thread_id = st.session_state.selected_conversation
+        history = self.graph.get_state_history(
+            config={"configurable": {"thread_id": thread_id}}
+        )
+
+        history = list(history)
+        return history[0].values["messages"] if len(history) > 0 else []
+
+
+    def print_chat_history(self):  
+        if self.usecase in ["Basic Chatbot", "Chatbot with Search"]:
+            history = self.get_current_history()
+            for msg in history:
+                content = msg.get("content") if isinstance(msg, dict) else msg.content 
+                role = msg.get("role") if isinstance(msg, dict) else msg.type if hasattr(msg, "type") else "tool"
+                if not content or not role:
                     continue
-
+               
+                # Mostrar según el rol
                 if role in ["user", "human"]:
                     with st.chat_message("user"):
                         st.write(content)
-                else:
+                elif role in ["ai", "assistant"]:
                     with st.chat_message("assistant"):
                         st.write(content)
+                elif role == "tool":
+                    with st.chat_message("assistant"):
+                        st.write(f"🛠️ Tool: {content}")
 
-    def display_result_on_ui(self):
+    def display_result_on_ui(self, user_message):
         usecase = self.usecase
         graph = self.graph
-        user_message = self.user_message
 
-        if usecase in ["Basic Chatbot", "Chatbot with Search"]:
+        if usecase in ["Basic Chatbot", "Chatbot with Search"]:          
             
-            # Añadir el mensaje del usuario al historial
-            if user_message:
-                st.session_state["chat_history"].append({"role": "user", "content": user_message})
-
             # Pasar todo el historial al grafo
-            state = {"messages": st.session_state["chat_history"]}
-            res = graph.invoke(state)
+            config = {"configurable": {"thread_id": st.session_state.selected_conversation}}
 
-            # Actualizar historial con la respuesta del grafo
-            st.session_state["chat_history"] = res["messages"]
-
-            self.print_chat_history(usecase)
-
+            graph.invoke({"messages": [{"role": "user", "content": user_message}]}, config=config)
+            self.print_chat_history()
+            
         elif usecase == "News Summarizer":
-            frequency = self.user_message["frequency"]
-            topic = self.user_message["topic"]
+            frequency = user_message["frequency"]
+            topic = user_message["topic"]
             with st.spinner("Obteniendo y resumiendo noticias... ⏳"):
                 graph.invoke({"frequency": frequency, "topic": topic})
                 NEWS_PATH = f"./news/{topic}-{frequency}_summary.md"

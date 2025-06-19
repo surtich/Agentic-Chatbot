@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import uuid
 from dotenv import load_dotenv
 from src.langgraphagenticai.ui.uiconfigfile import Config
 
@@ -19,14 +20,51 @@ class LoadStreamlitUI:
         self.config =  Config() # config
         self.user_controls = {}
 
+    def handle_conversations(self):
+      
+        st.markdown("### Conversaciones 💬")
+
+        if "conversations" not in st.session_state:
+            st.session_state.conversations = {str(uuid.uuid4()): "Conversación 1"}
+        if "selected_conversation" not in st.session_state:
+            st.session_state.selected_conversation = list(st.session_state.conversations.keys())[0]
+
+        def add_conversation():
+            # Genera un nuevo número de conversación basado en el último número. Extrae el número del texto "conversación number" y calcula el máximo
+            next_number = max([int(c.split(" ")[1]) for c in st.session_state.conversations.values()]) + 1
+            st.session_state.conversations[str(uuid.uuid4())] = f"Conversación {next_number}"
+            st.session_state.selected_conversation = list(st.session_state.conversations.keys())[-1]  # Selecciona la nueva
+
+        def delete_conversation():
+            if len(st.session_state.conversations) > 1:
+                selected = st.session_state.selected_conversation
+                del st.session_state.conversations[selected]
+                st.session_state.to_remove_conversation = st.session_state.selected_conversation
+                # Selecciona la primera conversación restante
+                st.session_state.selected_conversation = list(st.session_state.conversations.keys())[0]
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.button("➕ Añadir", on_click=add_conversation)
+
+        with col2:
+            borrar_disabled = len(st.session_state.conversations) == 1
+            st.button("❌ Borrar", on_click=delete_conversation, disabled=borrar_disabled)
+
+        st.selectbox(
+            "Selecciona una conversación",
+            options=list(st.session_state.conversations.keys()),
+            format_func=lambda x: st.session_state.conversations[x],
+            key="selected_conversation",
+        )
+
     def load_streamlit_ui(self):
         st.set_page_config(page_title= "🤖 " + self.config.get_page_title(), layout="wide")
         st.header("🤖 " + self.config.get_page_title())
         st.session_state.timeframe = ''
         st.session_state.topic = ''
         st.session_state.IsFetchButtonClicked = False
-        if not st.session_state.get("chat_history"):
-            st.session_state["chat_history"] = []
 
         with st.sidebar:
             # Get options from config
@@ -58,9 +96,8 @@ class LoadStreamlitUI:
 
             # Mantener el estado para los casos de uso indicados
             if self.user_controls["selected_usecase"] in ["Basic Chatbot", "Chatbot with Search"]:
-                if "chat_history" not in st.session_state:
-                    st.session_state["chat_history"] = []
-
+                self.handle_conversations()
+        
             if self.user_controls["selected_usecase"] in ["Chatbot with Search", "News Summarizer"]:
                 tavily_api_key = os.getenv("TAVILY_API_KEY", "")
                 os.environ["TAVILY_API_KEY"] = self.user_controls["TAVILY_API_KEY"] = st.session_state["TAVILY_API_KEY"] = st.text_input("Tavily API Key", value=tavily_api_key, type="password", autocomplete="off")
@@ -80,8 +117,6 @@ class LoadStreamlitUI:
                         st.session_state.timeframe = time_frame
                         st.session_state.topic = self.user_controls['topic'].strip()
                     else :
-                        st.session_state.IsFetchButtonClicked = False
-
-                    
+                        st.session_state.IsFetchButtonClicked = False                    
 
         return self.user_controls
