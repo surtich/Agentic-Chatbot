@@ -68,7 +68,7 @@ class LoadStreamlitUI:
 
         with st.sidebar:
             # Get options from config
-            llm_options = self.config.get_llm_options()
+            llm_options = self.config.get_provider_options()
             usecase_options = self.config.get_usecase_options()
 
             # LLM selection

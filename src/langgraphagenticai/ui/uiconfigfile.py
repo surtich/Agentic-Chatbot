@@ -5,8 +5,8 @@ class Config:
         self.config=ConfigParser()
         self.config.read(config_file)
 
-    def get_llm_options(self):
-        return self.config["DEFAULT"].get("LLM_OPTIONS", "Opción LLM no configurada").split(", ")
+    def get_provider_options(self):
+        return self.config["DEFAULT"].get("PROVIDER_OPTIONS", "Opción de proveedor no configurada").split(", ")
 
     def get_usecase_options(self):
         return self.config["DEFAULT"].get("USECASE_OPTIONS", "Caso de uso no configurado").split(", ")

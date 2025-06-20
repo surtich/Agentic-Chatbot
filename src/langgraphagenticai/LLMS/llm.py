@@ -24,8 +24,6 @@ def instantiate_llm(provider, model, api_key, base_url=None):
         return ChatLLM(model_name=model, openai_api_key=api_key, openai_api_base=base_url)
     return ChatLLM(model=model, api_key=SecretStr(api_key))
 
-from langchain_groq import ChatGroq as ChatLLM
-
 class LLM:
     def __init__(self, user_controls_input: dict[str, str]):
         self.user_controls_input = user_controls_input
